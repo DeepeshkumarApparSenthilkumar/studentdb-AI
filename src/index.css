@@ -1,0 +1,56 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer components {
+  .card {
+    @apply rounded-xl border border-border bg-surface;
+  }
+
+  .btn-primary {
+    @apply bg-blue text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors hover:bg-blue-dim;
+  }
+
+  .btn-ghost {
+    @apply rounded-lg px-3 py-2 text-sm text-text-secondary transition-colors hover:bg-surface2 hover:text-text-primary;
+  }
+
+  .badge {
+    @apply inline-flex items-center rounded px-2 py-0.5 font-mono text-xs font-medium;
+  }
+
+  .badge-blue {
+    @apply badge border border-blue/30 bg-blue/20 text-blue;
+  }
+
+  .badge-green {
+    @apply badge border border-green/30 bg-green/20 text-green;
+  }
+
+  .badge-orange {
+    @apply badge border border-orange/30 bg-orange/20 text-orange;
+  }
+
+  .badge-red {
+    @apply badge border border-red/30 bg-red/10 text-red;
+  }
+
+  .badge-cyan {
+    @apply badge border border-cyan/30 bg-cyan/10 text-cyan;
+  }
+
+  .input {
+    @apply w-full rounded-lg border border-border bg-surface2 px-3 py-2 text-sm text-text-primary transition-colors placeholder-text-dim focus:border-blue focus:outline-none focus:ring-1 focus:ring-blue/30;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar {
+    width: 4px;
+  }
+  .scrollbar-thin::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  .scrollbar-thin::-webkit-scrollbar-thumb {
+    background: #1e2640;
+    border-radius: 2px;
+  }
+}

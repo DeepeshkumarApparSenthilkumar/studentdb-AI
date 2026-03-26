@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>StudentDB — IIT Chicago AI Academic Platform</title>
+    <meta name="description" content="AI-powered academic platform for IIT Chicago. Text-to-SQL queries and RAG document intelligence." />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,300;0,400;0,500;1,300;1,400&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+    <style>
+      *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+      html, body, #root { height: 100%; }
+      body {
+        background: #05070f;
+        color: #e2e8f0;
+        font-family: 'Outfit', system-ui, sans-serif;
+        -webkit-font-smoothing: antialiased;
+      }
+      body::before {
+        content: '';
+        position: fixed;
+        top: 0; left: 0; right: 0; bottom: 0;
+        background: repeating-linear-gradient(
+          0deg,
+          transparent,
+          transparent 2px,
+          rgba(0, 229, 200, 0.015) 2px,
+          rgba(0, 229, 200, 0.015) 4px
+        );
+        pointer-events: none;
+        z-index: 9999;
+      }
+      ::-webkit-scrollbar { width: 6px; height: 6px; }
+      ::-webkit-scrollbar-track { background: #0c0f1e; }
+      ::-webkit-scrollbar-thumb { background: #1e2640; border-radius: 3px; }
+      ::-webkit-scrollbar-thumb:hover { background: #2a3555; }
+    </style>
+    <script type="module" src="/src/main.jsx"></script>
+  </head>
+  <body>
+    <div id="root"></div>
+  </body>
+</html>
