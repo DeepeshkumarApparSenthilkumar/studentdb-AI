@@ -74,7 +74,7 @@ export default function Schema() {
                     {table.columns?.map((col) => (
                       <tr key={col.name} className="border-b border-border/50 last:border-0">
                         <td className="py-2 pr-4 font-mono text-cyan">
-                          {col.primary_key && <span className="badge-orange text-[10px] mr-1">PK</span>}
+                          {col.pk && <span className="badge-orange text-[10px] mr-1">PK</span>}
                           {col.name}
                         </td>
                         <td className="py-2 pr-4 font-mono text-blue">{col.type}</td>

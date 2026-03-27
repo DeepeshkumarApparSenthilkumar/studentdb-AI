@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react'
-import { getCourses, createCourse, updateCourse, deleteCourse } from '../api/client'
+import { getCourses, createCourse, updateCourse, deleteCourse, getDepartments } from '../api/client'
 
 const EMPTY = { name: '', credits: '', description: '', instructor: '', max_enrollment: '', department: '' }
 
-function CourseModal({ course, onClose, onSave }) {
+// Fix 3: CourseModal now accepts departments prop and renders a <select> for department
+function CourseModal({ course, departments, onClose, onSave }) {
   const [form, setForm] = useState(course || EMPTY)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
@@ -65,10 +66,16 @@ function CourseModal({ course, onClose, onSave }) {
             <input className="input" placeholder="Instructor" value={form.instructor}
               onChange={(e) => setForm({ ...form, instructor: e.target.value })} />
           </div>
+          {/* Fix 3: department is now a <select> dropdown */}
           <div>
             <label className="text-xs text-text-secondary block mb-1">Department</label>
-            <input className="input" placeholder="Department" value={form.department}
-              onChange={(e) => setForm({ ...form, department: e.target.value })} />
+            <select className="input" value={form.department}
+              onChange={(e) => setForm({ ...form, department: e.target.value })}>
+              <option value="">Select Department</option>
+              {departments.map((d) => (
+                <option key={d} value={d}>{d}</option>
+              ))}
+            </select>
           </div>
           <div>
             <label className="text-xs text-text-secondary block mb-1">Description</label>
@@ -93,20 +100,42 @@ function CourseModal({ course, onClose, onSave }) {
 
 export default function Courses() {
   const [courses, setCourses] = useState([])
+  const [departments, setDepartments] = useState([])
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
   const [modal, setModal] = useState(null)
-  const [deleteId, setDeleteId] = useState(null)
+  const [deleteId, setDeleteId] = useState(null) // stores whole course object
+  const [error, setError] = useState('')
+
+  // Fix 4: debounce search input by 400ms
+  const [debouncedSearch, setDebouncedSearch] = useState('')
+  useEffect(() => {
+    const t = setTimeout(() => setDebouncedSearch(search), 400)
+    return () => clearTimeout(t)
+  }, [search])
 
   const load = () => {
     setLoading(true)
-    getCourses({ search })
-      .then((r) => setCourses(r.data))
-      .catch(console.error)
+    // Fix 3: also load departments
+    Promise.all([
+      getCourses({ search: debouncedSearch }),
+      getDepartments(),
+    ])
+      .then(([r, dRes]) => {
+        // Fix 1: safety unwrap — backend returns plain array
+        setCourses(Array.isArray(r.data) ? r.data : r.data.data || [])
+        setDepartments(Array.isArray(dRes.data) ? dRes.data : dRes.data || [])
+      })
+      // Fix 2: structured error handling
+      .catch((err) => {
+        console.error(err)
+        setError('Failed to load courses. Is the backend running?')
+      })
       .finally(() => setLoading(false))
   }
 
-  useEffect(() => { load() }, [search])
+  // Fix 4: trigger load on debouncedSearch, not raw search
+  useEffect(() => { load() }, [debouncedSearch])
 
   const handleSave = async (form) => {
     if (form.id) await updateCourse(form.id, form)
@@ -114,10 +143,17 @@ export default function Courses() {
     load()
   }
 
-  const handleDelete = async (id) => {
-    await deleteCourse(id)
-    setDeleteId(null)
-    load()
+  // Fix 5: try/catch on handleDelete; deleteId is now the full course object
+  const handleDelete = async () => {
+    try {
+      await deleteCourse(deleteId.id)
+      setDeleteId(null)
+      load()
+    } catch (err) {
+      console.error(err)
+      setError('Failed to delete course. Please try again.')
+      setDeleteId(null)
+    }
   }
 
   return (
@@ -142,6 +178,13 @@ export default function Courses() {
       <div className="px-6 py-3 border-b border-border bg-surface flex-shrink-0">
         <p className="text-xs text-text-secondary">Manage academic courses and enrollment</p>
       </div>
+
+      {/* Fix 2: error banner */}
+      {error && (
+        <div className="bg-red/10 border border-red/30 text-red text-xs px-3 py-2 rounded-lg font-mono mx-6 mt-2">
+          {error}
+        </div>
+      )}
 
       {/* Table */}
       <div className="flex-1 overflow-auto scrollbar-thin">
@@ -182,7 +225,8 @@ export default function Courses() {
                   <td className="px-4 py-3 font-mono text-xs text-text-secondary">{c.max_enrollment ?? '—'}</td>
                   <td className="px-4 py-3 text-right">
                     <button onClick={() => setModal(c)} className="btn-ghost text-xs py-1 mr-1">Edit</button>
-                    <button onClick={() => setDeleteId(c.id)}
+                    {/* Fix 3/5: store whole course object */}
+                    <button onClick={() => setDeleteId(c)}
                       className="text-xs px-2 py-1 rounded text-red hover:bg-red/10 transition-colors">Delete</button>
                   </td>
                 </tr>
@@ -192,26 +236,32 @@ export default function Courses() {
         )}
       </div>
 
+      {/* Fix 3: pass departments to CourseModal */}
       {modal && (
         <CourseModal
           course={modal === 'new' ? null : modal}
+          departments={departments}
           onClose={() => setModal(null)}
           onSave={handleSave}
         />
       )}
 
+      {/* Fix 3/5: deleteId is full course object; show course name */}
       {deleteId && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-[#0c0f1e] border border-[#1e2640] rounded-lg p-6 w-full max-w-xs">
             <h3 className="text-base font-semibold text-text-primary mb-2">Delete Course</h3>
-            <p className="text-sm text-text-secondary mb-4">This action cannot be undone.</p>
+            <p className="text-sm text-text-secondary mb-1">
+              Are you sure you want to delete <span className="text-text-primary font-medium">{deleteId.name}</span>?
+            </p>
+            <p className="text-xs text-text-dim mb-4">This action cannot be undone.</p>
             <div className="flex gap-2">
               <button onClick={() => setDeleteId(null)}
                 className="flex-1 bg-[#1e2640] text-white px-3 py-2 rounded hover:bg-[#2e3650] text-sm">
                 Cancel
               </button>
-              <button onClick={() => handleDelete(deleteId)}
-                className="flex-1 bg-red text-white px-3 py-2 rounded text-sm">
+              <button onClick={handleDelete}
+                className="flex-1 bg-red text-white px-3 py-2 rounded hover:bg-[#ff7d8a] text-sm">
                 Delete
               </button>
             </div>

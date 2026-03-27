@@ -26,7 +26,9 @@ export default function History() {
           <h1 className="text-2xl font-bold text-text-primary"> Query History</h1>
           <p className="text-sm text-text-secondary mt-0.5">Previous SQL Agent queries</p>
         </div>
-        <span className="badge-blue font-mono">{history.length} queries</span>
+        {!loading && (
+          <span className="badge-blue font-mono">{history.length} queries</span>
+        )}
       </div>
 
       {error && (
@@ -55,10 +57,10 @@ export default function History() {
               <div className="flex items-start justify-between gap-2 mb-1.5">
                 <p className="text-sm text-text-primary font-medium flex-1">{item.query}</p>
                 <div className="flex items-center gap-2 flex-shrink-0">
-                  {item.row_count != null && (
-                    <span className="badge-blue text-[10px]">{item.row_count} rows</span>
+                  {item.result_count != null && (
+                    <span className="badge-blue text-[10px]">{item.result_count} rows</span>
                   )}
-                  {item.success === false ? (
+                  {item.error ? (
                     <span className="badge-red text-[10px]">ERROR</span>
                   ) : (
                     <span className="badge-green text-[10px]">OK</span>

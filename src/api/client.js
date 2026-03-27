@@ -16,7 +16,7 @@ api.interceptors.response.use(
   (err) => {
     if (err.response?.status === 401) {
       localStorage.removeItem('token')
-      window.location.href = '/login'
+      // ProtectedRoute handles redirect; avoid hard reload that disrupts React state
     }
     return Promise.reject(err)
   }
@@ -56,6 +56,15 @@ export const getAnalytics = () => api.get('/reports/analytics')
 export const getSummary = () => api.get('/reports/summary')
 export const getDeptPerformance = () => api.get('/reports/department-performance')
 export const exportCSV = () => api.get('/reports/export/csv', { responseType: 'blob' })
-export const getReportsSummary = () => api.get('/reports/summary')
+export const getHonorRoll = () => api.get('/reports/honor-roll')
+export const getProbation = () => api.get('/reports/probation')
+export const exportPDF = () => api.get('/reports/export/pdf', { responseType: 'blob' })
+
+// Data Studio (BYO Data)
+export const connectDataStudio = (data) => api.post('/datastudio/connect', data)
+export const uploadDataStudioFile = (formData) => api.post('/datastudio/upload', formData, { 
+  headers: { 'Content-Type': 'multipart/form-data' } 
+})
+export const queryDataStudio = (query, connection_id) => api.post('/datastudio/query', { query, connection_id })
 
 export default api

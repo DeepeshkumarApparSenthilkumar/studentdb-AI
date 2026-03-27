@@ -115,23 +115,38 @@ export default function Students() {
   const [search, setSearch] = useState('')
   const [filterDept, setFilterDept] = useState('')
   const [modal, setModal] = useState(null) // null | 'new' | student obj
-  const [deleteId, setDeleteId] = useState(null)
+  const [deleteId, setDeleteId] = useState(null) // stores whole student object
+  const [error, setError] = useState('')
+
+  // Fix 4: debounce search input by 400ms
+  const [debouncedSearch, setDebouncedSearch] = useState('')
+  useEffect(() => {
+    const t = setTimeout(() => setDebouncedSearch(search), 400)
+    return () => clearTimeout(t)
+  }, [search])
 
   const load = () => {
     setLoading(true)
     Promise.all([
-      getStudents({ search, department: filterDept }),
+      // Fix 4: use debouncedSearch in API call
+      getStudents({ search: debouncedSearch, department: filterDept }),
       getDepartments(),
     ])
       .then(([sRes, dRes]) => {
-        setStudents(sRes.data)
-        setDepartments(dRes.data || [])
+        // Fix 1: safety unwrap — backend returns plain array
+        setStudents(Array.isArray(sRes.data) ? sRes.data : sRes.data.data || [])
+        setDepartments(Array.isArray(dRes.data) ? dRes.data : dRes.data || [])
       })
-      .catch(console.error)
+      // Fix 2: structured error handling
+      .catch((err) => {
+        console.error(err)
+        setError('Failed to load students. Is the backend running?')
+      })
       .finally(() => setLoading(false))
   }
 
-  useEffect(() => { load() }, [search, filterDept])
+  // Fix 4: trigger load on debouncedSearch, not raw search
+  useEffect(() => { load() }, [debouncedSearch, filterDept])
 
   const handleSave = async (form) => {
     if (form.id) {
@@ -142,8 +157,9 @@ export default function Students() {
     load()
   }
 
-  const handleDelete = async (id) => {
-    await deleteStudent(id)
+  // Fix 3: handleDelete now reads deleteId.id (deleteId is the full student object)
+  const handleDelete = async () => {
+    await deleteStudent(deleteId.id)
     setDeleteId(null)
     load()
   }
@@ -173,6 +189,13 @@ export default function Students() {
           </button>
         </div>
       </div>
+
+      {/* Fix 2: error banner */}
+      {error && (
+        <div className="bg-red/10 border border-red/30 text-red text-xs px-3 py-2 rounded-lg font-mono mx-6 mt-2">
+          {error}
+        </div>
+      )}
 
       {/* Table */}
       <div className="flex-1 overflow-auto scrollbar-thin">
@@ -213,7 +236,8 @@ export default function Students() {
                   <td className="px-4 py-3 font-mono text-xs text-text-secondary">{s.credits ?? '—'}</td>
                   <td className="px-4 py-3 text-right">
                     <button onClick={() => setModal(s)} className="btn-ghost text-xs py-1 mr-1">Edit</button>
-                    <button onClick={() => setDeleteId(s.id)}
+                    {/* Fix 3: store whole student object, not just id */}
+                    <button onClick={() => setDeleteId(s)}
                       className="text-xs px-2 py-1 rounded text-red hover:bg-red/10 transition-colors">Delete</button>
                   </td>
                 </tr>
@@ -233,17 +257,21 @@ export default function Students() {
         />
       )}
 
+      {/* Fix 3: deleteId is the full student object; show student name; call handleDelete() */}
       {deleteId && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-[#0c0f1e] border border-[#1e2640] rounded-lg p-6 w-full max-w-xs">
             <h3 className="text-base font-semibold text-text-primary mb-2">Delete Student</h3>
-            <p className="text-sm text-text-secondary mb-4">This action cannot be undone.</p>
+            <p className="text-sm text-text-secondary mb-1">
+              Are you sure you want to delete <span className="text-text-primary font-medium">{deleteId.name}</span>?
+            </p>
+            <p className="text-xs text-text-dim mb-4">This action cannot be undone.</p>
             <div className="flex gap-2">
               <button onClick={() => setDeleteId(null)}
                 className="flex-1 bg-[#1e2640] text-white px-3 py-2 rounded hover:bg-[#2e3650] text-sm">
                 Cancel
               </button>
-              <button onClick={() => handleDelete(deleteId)}
+              <button onClick={handleDelete}
                 className="flex-1 bg-red text-white px-3 py-2 rounded hover:bg-[#ff7d8a] text-sm">
                 Delete
               </button>

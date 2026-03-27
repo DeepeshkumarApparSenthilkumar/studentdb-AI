@@ -11,6 +11,7 @@ import RagPage from './pages/RagPage'
 import Reports from './pages/Reports'
 import Schema from './pages/Schema'
 import History from './pages/History'
+import DataStudio from './pages/DataStudio'
 
 function AppRoutes() {
   return (
@@ -31,6 +32,7 @@ function AppRoutes() {
                 <Route path="/reports" element={<Reports />} />
                 <Route path="/schema" element={<Schema />} />
                 <Route path="/history" element={<History />} />
+                <Route path="/data-studio" element={<DataStudio />} />
                 <Route path="*" element={<Navigate to="/dashboard" replace />} />
               </Routes>
             </Layout>
