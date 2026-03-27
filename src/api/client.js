@@ -1,7 +1,11 @@
 import axios from 'axios'
 
+// In production (Vercel), set VITE_API_URL to your Railway/Render backend URL.
+// In development, the Vite proxy forwards /api → localhost:8000 automatically.
+const BASE_URL = import.meta.env.VITE_API_URL ? `${import.meta.env.VITE_API_URL}/api` : '/api'
+
 const api = axios.create({
-  baseURL: '/api',
+  baseURL: BASE_URL,
   headers: { 'Content-Type': 'application/json' },
 })
 
