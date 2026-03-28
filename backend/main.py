@@ -1,14 +1,22 @@
 import os
+from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 import uvicorn
 from routers import datastudio, core
 from dotenv import load_dotenv
+from database import init_db
 
 # Load variables from .env file into os.environ
 load_dotenv()
 
-app = FastAPI(title="StudentDB Backend API")
+
+@asynccontextmanager
+async def lifespan(_app: FastAPI):
+    init_db()
+    yield
+
+app = FastAPI(title="StudentDB Backend API", lifespan=lifespan)
 
 # CORS — allow Vercel frontend + localhost dev
 ALLOWED_ORIGINS = os.environ.get("ALLOWED_ORIGINS", "*").split(",")
